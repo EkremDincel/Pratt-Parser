@@ -66,6 +66,16 @@ class Lexer:
             return True
         return False
 
+    def match_one_or_more(self, c: str):
+        if self.match(c):
+            while self.match(c):
+                pass
+            return True
+        return False
+
+    def pass(self, c: str):
+        while self.match(c):
+            pass
 
     def at_eof(self) -> bool:
         return self.peek() == ""
