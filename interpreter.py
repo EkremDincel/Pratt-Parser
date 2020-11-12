@@ -7,6 +7,8 @@ def public(f):
     __all__.append(f.__name__)
     return f
 
+class LexerError(ValueError): pass
+class ParserError(ValueError): pass
 
 class EnumMetaDict(dict):
 
@@ -64,12 +66,13 @@ class Lexer:
             return True
         return False
 
+
     def at_eof(self) -> bool:
         return self.peek() == ""
 
     @overrideable
     def error(self, msg: str):
-        raise SyntaxError("Invalid character {!r} at index {}: {}".format(self.peek(), self.index, msg))
+        raise LexerError("Invalid character {!r} at index {}: {}".format(self.peek(), self.index, msg))
 
     @overrideable
     def token(self):
@@ -107,11 +110,11 @@ class Parser:
 
     def expect(self, type_):
         if not self.match(type_):
-            self.error()
+            self.error("Expected a {!r} token.".format(type_))
 
     @overrideable
     def error(self, msg):
-        raise
+        raise ParserError("Invalid token {!r} at index {}: {}".format(self.peek(), self.lexer.index, msg))
 
     @overrideable
     def build_parselets(self):
@@ -121,7 +124,7 @@ class Parser:
         try:
             return self.prefix_parselets[token.type]
         except KeyError:
-            self.error()
+            self.error("Expected a prefix operator or value.")
             
     def get_infix_parselet(self, token):
         return self.infix_parselets[token.type]
@@ -153,7 +156,7 @@ class Parser:
         ast = self.parse(0)
         if self.lexer.at_eof():
             return ast
-        self.error()
+        self.error("Expected EOF.")
 
 @public
 class FixRegister:
